@@ -1,0 +1,94 @@
+#
+# DO NOT DELETE
+# This file is added to the controller container.
+# Values are used as defaults when not specified in CRI
+#
+apiVersion: tnc.ibm.com/v1beta1
+kind: CP4NAWired
+metadata:
+  name: cp4nawired-default
+  labels:
+    app.kubernetes.io/instance: cp4nawired
+    app.kubernetes.io/managed-by: olm
+    app.kubernetes.io/name: cp4nawired
+spec:
+  shutdown: "None"
+  license:
+    accept: true
+
+  version: 2.5.0
+
+  advanced:
+    imagePullPolicy: "IfNotPresent"
+    mcnpUiThemeConfig: "ibm"
+    mcnpZenAccessTokenUri: ""
+    mcnpIshtarEndpoint: ""
+    mcnpSiteplannerEndpoint: ""
+    mcnpSamlEntityId: ""
+    mcnpSamlIdentityProviderEntityId: "https://w3id-prep.ice.ibmcloud.com/saml/sps/saml20ip/saml20"
+    mcnpSamlSingleSignonUrl: "https://preprod.login.w3.ibm.com/saml/sps/saml20ip/saml20/login"
+    mcnpGeneratedSslCert: true
+    mcnpIdentityProviderVerify: true
+    mcnpCorePoolSize: 20
+    mcnpMaxPoolSize: 50
+    mcnpQueueCapacity: 200
+    mcnpLogLevel: "INFO"
+    mcnpEnableKibanaLogging: false
+    mcnpKibanaLoggingEndpoint: "http://ui.lm:31001"
+    mcnpKibanaLoggingIndex: "mcnp-logs"
+    mcnpEnableAuditLog: false
+    mcnpEnableMultiTenancy: true
+    mcnpReadinessProbeEnabled: true
+    podSettings:
+      mcnp:
+        replicas: 1
+        terminationGracePeriodSeconds: 60
+        resources:
+          requests:
+            memory: "584Mi"
+            cpu: "0.1"
+            ephemeral-storage: "100Mi"
+          limits:
+            memory: "884Mi"
+            cpu: "1"
+            ephemeral-storage: "1Gi"
+        livenessProbe:
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          failureThreshold: 6
+          timeoutSeconds: 1
+        readinessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 12
+          timeoutSeconds: 1
+        affinity:
+          podAntiAffinity:
+            ## Default anti-affinity rule is to try and schedule multiple pods of this app on different nodes
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: "kubernetes.io/hostname"
+                labelSelector:
+                  matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                    - mcnp
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: "kubernetes.io/arch"
+                  operator: In
+                  values:
+                  - amd64
+        tolerations: []              
+    routeSettings:
+      mcnp:
+        rateLimitConnections: true
+        concurrentTcpConnections: 20
+        tcpConnectionRate: 100
+    jvmSettings:
+      mcnp: "-Xmx384m"
